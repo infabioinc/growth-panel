@@ -19,6 +19,7 @@ export default function LandingPage() {
 
   const clients = [
     '- Select Client -',
+    'Madhav Solar Energy',
     'Fabulous Media',
     'Battery Smart',
     'Workwear Express',
@@ -130,7 +131,9 @@ export default function LandingPage() {
                           onClick={() => {
                             if (client !== '- Select Client -') {
                               setSelectedClient(client);
-                              if (client === 'Fabulous Media') {
+                              if (client === 'Madhav Solar Energy') {
+                                navigate('/madhavsolar/dashboard');
+                              } else if (client === 'Fabulous Media') {
                                 navigate('/fabulousmedia/dashboard');
                               } else if (client === 'Battery Smart') {
                                 navigate('/batterysmart/dashboard');
@@ -218,7 +221,9 @@ export default function LandingPage() {
                   }
                   // Determine target route based on selected client
                   let targetRoute = '/ipltech/dashboard';
-                  if (selectedClient === 'Fabulous Media') {
+                  if (selectedClient === 'Madhav Solar Energy') {
+                    targetRoute = '/madhavsolar/dashboard';
+                  } else if (selectedClient === 'Fabulous Media') {
                     targetRoute = '/fabulousmedia/dashboard';
                   } else if (selectedClient === 'Battery Smart') {
                     targetRoute = '/batterysmart/dashboard';
@@ -314,7 +319,9 @@ export default function LandingPage() {
                   }
                   // Determine target route based on selected client and feature
                   let targetRoute = `/ipltech${feature.route}`;
-                  if (selectedClient === 'Fabulous Media') {
+                  if (selectedClient === 'Madhav Solar Energy') {
+                    targetRoute = `/madhavsolar${feature.route}`;
+                  } else if (selectedClient === 'Fabulous Media') {
                     targetRoute = `/fabulousmedia${feature.route}`;
                   } else if (selectedClient === 'Battery Smart') {
                     targetRoute = `/batterysmart${feature.route}`;

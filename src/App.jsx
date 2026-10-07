@@ -140,6 +140,11 @@ import FabulousMediaObjectivesPage from './pages/FabulousMedia/ObjectivesPage';
 import FabulousMediaInitiativesPage from './pages/FabulousMedia/InitiativesPage';
 import FabulousMediaExperimentsPage from './pages/FabulousMedia/ExperimentsPage';
 
+import MadhavSolarDashboardPage from './pages/MadhavSolar/DashboardPage';
+import MadhavSolarObjectivesPage from './pages/MadhavSolar/ObjectivesPage';
+import MadhavSolarInitiativesPage from './pages/MadhavSolar/InitiativesPage';
+import MadhavSolarExperimentsPage from './pages/MadhavSolar/ExperimentsPage';
+
 function AppRoutes() {
   return (
     <Routes>
@@ -678,6 +683,10 @@ function AppRoutes() {
       <Route path="/fabulousmedia/initiatives" element={<FabulousMediaInitiativesPage />} />
       <Route path="/fabulousmedia/experiments" element={<FabulousMediaExperimentsPage />} />
 
+      <Route path="/madhavsolar/dashboard" element={<MadhavSolarDashboardPage />} />
+      <Route path="/madhavsolar/objectives" element={<MadhavSolarObjectivesPage />} />
+      <Route path="/madhavsolar/initiatives" element={<MadhavSolarInitiativesPage />} />
+      <Route path="/madhavsolar/experiments" element={<MadhavSolarExperimentsPage />} />
     </Routes>
   );
 }

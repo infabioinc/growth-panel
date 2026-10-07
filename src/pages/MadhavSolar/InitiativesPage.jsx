@@ -48,6 +48,13 @@ const calculateProgress = (elements) => {
   return Math.round(totalProgress);
 };
 
+const trackerStages = ['In Process', 'Successful', 'Failed', 'Ideas'];
+const getTrackerStage = (item) => {
+  if (item.workflowStatus === 'Failed') return 'Failed';
+  if (!item.status) return 'Ideas';
+  return calculateProgress(item.elements) === 100 ? 'Successful' : 'In Process';
+};
+
 // --- Madhav Solar Energy Key Initiatives Data Structure ---
 const initialInitiativesData = {
   "infrastructure": [
@@ -348,7 +355,7 @@ const ProgressBar = ({ percentage, colorClass }) => {
   );
 };
 
-const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiveId }) => {
+const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, onUpdateStage, category, objectiveId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Calculate progress dynamically
@@ -426,7 +433,7 @@ const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiv
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Success Rate</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Plan completion</span>
             <span className="text-sm font-bold text-slate-800">{calculatedProgress}%</span>
           </div>
           <ProgressBar percentage={calculatedProgress} colorClass={colorClass} />
@@ -496,41 +503,21 @@ const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiv
       )}
       
       {isExpanded && (
-        <div className="px-4 py-3 bg-white border-t border-slate-100 flex justify-end gap-2">
-            <button 
-              className="p-1.5 text-slate-400 rounded-lg transition-colors"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--info)';
-                e.currentTarget.style.backgroundColor = 'rgba(54, 163, 247, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '';
-                e.currentTarget.style.backgroundColor = '';
-              }}
-            >
-              <MessageSquare size={16} />
-            </button>
-            <button 
-              className="p-1.5 text-slate-400 rounded-lg transition-colors"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--warning)';
-                e.currentTarget.style.backgroundColor = 'rgba(255, 184, 34, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '';
-                e.currentTarget.style.backgroundColor = '';
-              }}
-            >
-              <Settings size={16} />
-            </button>
+        <div className="px-5 py-3 bg-white border-t border-slate-100 flex items-center justify-between gap-3">
+          <label htmlFor={`stage-${category}-${objectiveId}`} className="text-xs font-medium text-slate-500">Tracking status</label>
+          <select id={`stage-${category}-${objectiveId}`} value={getTrackerStage(item)}
+            onChange={(event) => onUpdateStage(category, objectiveId, event.target.value)}
+            className="text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            {trackerStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+          </select>
         </div>
       )}
     </div>
   );
 };
 
-const FilterItem = ({ icon: Icon, label, active }) => (
-  <button
+const FilterItem = ({ icon: Icon, label, active, onClick }) => (
+  <button type="button" onClick={onClick} aria-pressed={active}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
       active 
         ? 'bg-slate-100 text-slate-700' 
@@ -570,7 +557,7 @@ const ColumnHeader = ({ title, count, color, icon: Icon }) => {
 
 // --- Initiatives View Component ---
 
-const InitiativesView = ({ initiativesData, onUpdateValue }) => (
+const InitiativesView = ({ initiativesData, onUpdateValue, onUpdateStatus, onUpdateStage }) => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
     <div className="flex flex-col h-full">
       <ColumnHeader title="Infrastructure Setup" count={initiativesData.infrastructure.length} color="border-cyan" icon={Cpu} />
@@ -580,6 +567,8 @@ const InitiativesView = ({ initiativesData, onUpdateValue }) => (
             key={item.id} 
             item={item} 
             onUpdateValue={onUpdateValue}
+            onUpdateStatus={onUpdateStatus}
+            onUpdateStage={onUpdateStage}
             category="infrastructure"
             objectiveId={item.id}
           />
@@ -594,6 +583,8 @@ const InitiativesView = ({ initiativesData, onUpdateValue }) => (
             key={item.id} 
             item={item} 
             onUpdateValue={onUpdateValue}
+            onUpdateStatus={onUpdateStatus}
+            onUpdateStage={onUpdateStage}
             category="dataLoops"
             objectiveId={item.id}
           />
@@ -609,6 +600,8 @@ const InitiativesView = ({ initiativesData, onUpdateValue }) => (
               key={item.id} 
               item={item} 
               onUpdateValue={onUpdateValue}
+            onUpdateStatus={onUpdateStatus}
+            onUpdateStage={onUpdateStage}
               category="teamStructure"
               objectiveId={item.id}
             />
@@ -686,13 +679,33 @@ export default function MadhavSolarInitiativesPage() {
     'Yastudy',
   ];
 
+  const [activeFilter, setActiveFilter] = useState(() =>
+    trackerStages.find(stage => Object.values(initiativesData).flat().some(item => getTrackerStage(item) === stage)) || 'Ideas');
+  const filteredData = Object.fromEntries(Object.entries(initiativesData).map(([category, items]) =>
+    [category, items.filter(item => getTrackerStage(item) === activeFilter)]));
+  const visibleCount = Object.values(filteredData).flat().length;
+
+  const handleUpdateStage = (category, id, stage) => {
+    setInitiativesData(previous => ({ ...previous, [category]: previous[category].map(item => {
+      if (item.id !== id) return item;
+      const elements = stage === 'Successful' ? item.elements.map(element => ({ ...element, val: '100%' })) : item.elements;
+      // Returning a completed track to In Process preserves its assessed values.
+      const nextStage = stage === 'In Process' && calculateProgress(elements) === 100 ? 'Successful' : stage;
+      return { ...item, elements, status: nextStage !== 'Ideas', workflowStatus: nextStage === 'Failed' ? 'Failed' : undefined };
+    }) }));
+    const current = initiativesData[category].find(item => item.id === id);
+    setActiveFilter(stage === 'In Process' && calculateProgress(current.elements) === 100 ? 'Successful' : stage);
+  };
   const handleUpdateStatus = (category, id) => {
-    setInitiativesData(previous => ({ ...previous, [category]: previous[category].map(item =>
-      item.id === id ? { ...item, status: !item.status } : item) }));
+    const item = initiativesData[category].find(entry => entry.id === id);
+    handleUpdateStage(category, id, item.status ? 'Ideas' : 'In Process');
   };
 
   // Function to update element value
   const handleUpdateValue = (category, objectiveId, elementIndex, newValue) => {
+    const item = initiativesData[category].find(entry => entry.id === objectiveId);
+    const nextElements = item.elements.map((element, index) => index === elementIndex ? { ...element, val: newValue } : element);
+    setActiveFilter(getTrackerStage({ ...item, elements: nextElements }));
     setInitiativesData(prev => {
       const updated = { ...prev };
       const categoryArray = [...updated[category]];
@@ -771,7 +784,7 @@ export default function MadhavSolarInitiativesPage() {
             <div className="hidden md:flex items-center">
               <h2 className="text-xl font-bold text-slate-800">Initiatives Tracker</h2>
               <span className="mx-3 text-slate-300">|</span>
-              <span className="text-sm font-medium text-slate-500">In Process</span>
+              <span className="text-sm font-medium text-slate-500">{activeFilter}</span>
             </div>
           </div>
 
@@ -831,20 +844,20 @@ export default function MadhavSolarInitiativesPage() {
           </div>
         </header>
 
-        <div className="bg-blue-50 border-b border-blue-100 px-6 lg:px-10 py-3 text-xs text-slate-600">
-          Proposed Madhav Solar plan · Completion starts unassessed at 0%; update only after verification. Values measure plan completion, not business results. Status switches enable tracking; experiments are Ideas until approved. Changes stay in this browser.
-        </div>
-
-        <div className="bg-white border-b border-slate-200 px-6 lg:px-10 py-3 flex flex-wrap items-center gap-3">
-          <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold">Proposed plan</span>
-          <span className="text-xs text-slate-500">Expand a card to assess completion; use its switch to enable tracking.</span>
+        <div className="bg-white border-b border-slate-200 px-6 lg:px-10 py-3 flex flex-wrap items-center gap-5 lg:gap-7">
+          {[[FileText, 'In Process'], [CheckCircle2, 'Successful'], [XCircle, 'Failed'], [Lightbulb, 'Ideas']].map(([icon, label]) => (
+            <FilterItem key={label} icon={icon} label={label} active={activeFilter === label} onClick={() => setActiveFilter(label)} />
+          ))}
         </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto bg-[#F3F4F6] p-6 lg:p-8">
           <div className="max-w-[1600px] mx-auto h-full">
-            <InitiativesView initiativesData={initiativesData} onUpdateValue={handleUpdateValue}
-                      onUpdateStatus={handleUpdateStatus} />
+            <p className="text-xs text-slate-500 mb-5">Proposed plan · Percentages track assessed completion. Expand a card to update it; changes are saved in this browser.</p>
+            {visibleCount === 0 && <p className="mb-6 rounded-xl bg-white p-5 text-sm text-slate-500">No tracks in {activeFilter}. Select Ideas to review the proposed plan.</p>}
+            <InitiativesView initiativesData={filteredData} onUpdateValue={handleUpdateValue}
+                      onUpdateStatus={handleUpdateStatus}
+                      onUpdateStage={handleUpdateStage} />
           </div>
         </div>
       </main>

@@ -39,6 +39,13 @@ const calculateProgress = (elements) => {
   return Math.round(totalProgress);
 };
 
+const trackerStages = ['In Process', 'Successful', 'Failed', 'Ideas'];
+const getTrackerStage = (item) => {
+  if (item.workflowStatus === 'Failed') return 'Failed';
+  if (!item.status) return 'Ideas';
+  return calculateProgress(item.elements) === 100 ? 'Successful' : 'In Process';
+};
+
 // --- Madhav Solar Energy Core Objectives Data Structure ---
 const initialObjectivesData = {
   "coreObjectives": [
@@ -352,7 +359,7 @@ const proposedTargets = {
   },
 };
 
-const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiveId }) => {
+const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, onUpdateStage, category, objectiveId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Calculate progress dynamically
@@ -428,8 +435,6 @@ const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiv
           </button>
         </div>
 
-        <p className="text-xs text-blue-700 bg-blue-50 rounded-lg p-3 mb-4 leading-relaxed"><span className="font-semibold">Proposed target · </span>{proposedTargets[category]?.[objectiveId]}<span className="block text-slate-500 mt-1">Planning assumption; validate against baseline, budget and capacity.</span></p>
-
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Plan completion</span>
@@ -454,6 +459,7 @@ const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiv
       {/* Expanded Details */}
       {isExpanded && item.elements.length > 0 && (
         <div className="bg-slate-50 border-t border-slate-100 p-4 space-y-3">
+        <p className="text-xs text-blue-700 bg-blue-50 rounded-lg p-3 mb-4 leading-relaxed"><span className="font-semibold">Proposed target · </span>{proposedTargets[category]?.[objectiveId]}<span className="block text-slate-500 mt-1">Planning assumption; validate against baseline, budget and capacity.</span></p>
           {item.elements.map((el, idx) => {
             const sliderValue = percentageToSlider(el.val);
             const sliderColor = getSliderColor(idx);
@@ -503,41 +509,21 @@ const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiv
       
       {/* Footer Actions */}
       {isExpanded && (
-        <div className="px-4 py-3 bg-white border-t border-slate-100 flex justify-end gap-2">
-            <button 
-              className="p-1.5 text-slate-400 rounded-lg transition-colors"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--info)';
-                e.currentTarget.style.backgroundColor = 'rgba(54, 163, 247, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '';
-                e.currentTarget.style.backgroundColor = '';
-              }}
-            >
-              <MessageSquare size={16} />
-            </button>
-            <button 
-              className="p-1.5 text-slate-400 rounded-lg transition-colors"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--warning)';
-                e.currentTarget.style.backgroundColor = 'rgba(255, 184, 34, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '';
-                e.currentTarget.style.backgroundColor = '';
-              }}
-            >
-              <Settings size={16} />
-            </button>
+        <div className="px-5 py-3 bg-white border-t border-slate-100 flex items-center justify-between gap-3">
+          <label htmlFor={`stage-${category}-${objectiveId}`} className="text-xs font-medium text-slate-500">Tracking status</label>
+          <select id={`stage-${category}-${objectiveId}`} value={getTrackerStage(item)}
+            onChange={(event) => onUpdateStage(category, objectiveId, event.target.value)}
+            className="text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            {trackerStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+          </select>
         </div>
       )}
     </div>
   );
 };
 
-const FilterItem = ({ icon: Icon, label, active }) => (
-  <button
+const FilterItem = ({ icon: Icon, label, active, onClick }) => (
+  <button type="button" onClick={onClick} aria-pressed={active}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
       active 
         ? 'bg-slate-100 text-slate-700' 
@@ -637,13 +623,33 @@ export default function MadhavSolarObjectivesPage() {
     'Yastudy',
   ];
 
+  const [activeFilter, setActiveFilter] = useState(() =>
+    trackerStages.find(stage => Object.values(objectivesData).flat().some(item => getTrackerStage(item) === stage)) || 'Ideas');
+  const filteredData = Object.fromEntries(Object.entries(objectivesData).map(([category, items]) =>
+    [category, items.filter(item => getTrackerStage(item) === activeFilter)]));
+  const visibleCount = Object.values(filteredData).flat().length;
+
+  const handleUpdateStage = (category, id, stage) => {
+    setObjectivesData(previous => ({ ...previous, [category]: previous[category].map(item => {
+      if (item.id !== id) return item;
+      const elements = stage === 'Successful' ? item.elements.map(element => ({ ...element, val: '100%' })) : item.elements;
+      // Returning a completed track to In Process preserves its assessed values.
+      const nextStage = stage === 'In Process' && calculateProgress(elements) === 100 ? 'Successful' : stage;
+      return { ...item, elements, status: nextStage !== 'Ideas', workflowStatus: nextStage === 'Failed' ? 'Failed' : undefined };
+    }) }));
+    const current = objectivesData[category].find(item => item.id === id);
+    setActiveFilter(stage === 'In Process' && calculateProgress(current.elements) === 100 ? 'Successful' : stage);
+  };
   const handleUpdateStatus = (category, id) => {
-    setObjectivesData(previous => ({ ...previous, [category]: previous[category].map(item =>
-      item.id === id ? { ...item, status: !item.status } : item) }));
+    const item = objectivesData[category].find(entry => entry.id === id);
+    handleUpdateStage(category, id, item.status ? 'Ideas' : 'In Process');
   };
 
   // Function to update element value
   const handleUpdateValue = (category, objectiveId, elementIndex, newValue) => {
+    const item = objectivesData[category].find(entry => entry.id === objectiveId);
+    const nextElements = item.elements.map((element, index) => index === elementIndex ? { ...element, val: newValue } : element);
+    setActiveFilter(getTrackerStage({ ...item, elements: nextElements }));
     setObjectivesData(prev => {
       const updated = { ...prev };
       const categoryArray = [...updated[category]];
@@ -722,7 +728,7 @@ export default function MadhavSolarObjectivesPage() {
             <div className="hidden md:flex items-center">
               <h2 className="text-xl font-bold text-slate-800">Objectives Tracker</h2>
               <span className="mx-3 text-slate-300">|</span>
-              <span className="text-sm font-medium text-slate-500">In Process</span>
+              <span className="text-sm font-medium text-slate-500">{activeFilter}</span>
             </div>
           </div>
 
@@ -782,31 +788,31 @@ export default function MadhavSolarObjectivesPage() {
           </div>
         </header>
 
-        <div className="bg-blue-50 border-b border-blue-100 px-6 lg:px-10 py-3 text-xs text-slate-600">
-          Proposed Madhav Solar plan · Completion starts unassessed at 0%; update only after verification. Values measure plan completion, not business results. Status switches enable tracking; experiments are Ideas until approved. Changes stay in this browser.
-        </div>
-
-        <div className="bg-white border-b border-slate-200 px-6 lg:px-10 py-3 flex flex-wrap items-center gap-3">
-          <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold">Proposed plan</span>
-          <span className="text-xs text-slate-500">Expand a card to assess completion; use its switch to enable tracking.</span>
+        <div className="bg-white border-b border-slate-200 px-6 lg:px-10 py-3 flex flex-wrap items-center gap-5 lg:gap-7">
+          {[[FileText, 'In Process'], [CheckCircle2, 'Successful'], [XCircle, 'Failed'], [Lightbulb, 'Ideas']].map(([icon, label]) => (
+            <FilterItem key={label} icon={icon} label={label} active={activeFilter === label} onClick={() => setActiveFilter(label)} />
+          ))}
         </div>
 
         {/* Scrollable Content - Kanban Style Layout */}
         <div className="flex-1 overflow-y-auto bg-[#F3F4F6] p-6 lg:p-8">
           <div className="max-w-[1600px] mx-auto h-full">
+            <p className="text-xs text-slate-500 mb-5">Proposed plan · Percentages track assessed completion. Expand a card to update it; changes are saved in this browser.</p>
+            {visibleCount === 0 && <p className="mb-6 rounded-xl bg-white p-5 text-sm text-slate-500">No tracks in {activeFilter}. Select Ideas to review the proposed plan.</p>}
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
               
               {/* Column 1: Core Objectives */}
               <div className="flex flex-col h-full">
-                <ColumnHeader title="Core Objectives" count={objectivesData.coreObjectives.length} color="border-indigo-300" />
+                <ColumnHeader title="Core Objectives" count={filteredData.coreObjectives.length} color="border-indigo" />
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-20">
-                  {objectivesData.coreObjectives.map(item => (
+                  {filteredData.coreObjectives.map(item => (
                     <ObjectiveCard 
                       key={item.id} 
                       item={item} 
                       onUpdateValue={handleUpdateValue}
                       onUpdateStatus={handleUpdateStatus}
+                      onUpdateStage={handleUpdateStage}
                       category="coreObjectives"
                       objectiveId={item.id}
                     />
@@ -816,14 +822,15 @@ export default function MadhavSolarObjectivesPage() {
 
               {/* Column 2: Strategic KPIs */}
               <div className="flex flex-col h-full">
-                <ColumnHeader title="Strategic KPIs" count={objectivesData.strategicKPIs.length} color="border-success" />
+                <ColumnHeader title="Strategic KPIs" count={filteredData.strategicKPIs.length} color="border-success" />
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-20">
-                  {objectivesData.strategicKPIs.map(item => (
+                  {filteredData.strategicKPIs.map(item => (
                     <ObjectiveCard 
                       key={item.id} 
                       item={item} 
                       onUpdateValue={handleUpdateValue}
                       onUpdateStatus={handleUpdateStatus}
+                      onUpdateStage={handleUpdateStage}
                       category="strategicKPIs"
                       objectiveId={item.id}
                     />
@@ -833,14 +840,15 @@ export default function MadhavSolarObjectivesPage() {
 
               {/* Column 3: Growth Metrics */}
               <div className="flex flex-col h-full">
-                <ColumnHeader title="Growth Metrics" count={objectivesData.growthMetrics.length} color="border-warning" />
+                <ColumnHeader title="Growth Metrics (OKRs)" count={filteredData.growthMetrics.length} color="border-warning" />
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-20">
-                  {objectivesData.growthMetrics.map(item => (
+                  {filteredData.growthMetrics.map(item => (
                     <ObjectiveCard 
                       key={item.id} 
                       item={item} 
                       onUpdateValue={handleUpdateValue}
                       onUpdateStatus={handleUpdateStatus}
+                      onUpdateStage={handleUpdateStage}
                       category="growthMetrics"
                       objectiveId={item.id}
                     />

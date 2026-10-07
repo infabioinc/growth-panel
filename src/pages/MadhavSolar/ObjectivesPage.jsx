@@ -355,7 +355,7 @@ const proposedTargets = {
   growthMetrics: {
     1: 'Qualified lead rate: 35–45%. Residential lead share: 45–50%; C&I: 35–40%; Industrial: 10–15%. Remarketing: 15–20% of qualified leads. Average target project value: ₹2.5L+.',
     2: 'Landing-page CVR: 4–6%; lead-to-survey: 25–35%; survey-to-proposal: 50–60%; proposal-to-project: 20–30%. Confirm the lead denominator before reporting.',
-    3: 'Baseline pending: agree metric definitions and comparison periods before assessment. Growth Score targets: 300+/500 at 90 days; 375+/500 at 6 months. No current business score until actual data is available.',
+    3: 'Current strategic growth maturity: 238/500 — Foundation Stage, Close to Structured Growth. Targets: 320+/500 at 90 days; 390+/500 at 6 months. Based on available project knowledge; separate from live performance and tracker completion. Confirm commercial metric baselines and comparison periods.',
   },
 };
 

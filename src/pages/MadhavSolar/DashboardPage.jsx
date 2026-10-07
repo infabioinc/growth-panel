@@ -136,15 +136,30 @@ const targetGroups = {
     ['Build Premium Brand Authority', '30% increase in branded search + direct traffic'],
   ],
 };
+// Strategic maturity assessment supplied from the existing project knowledge.
+// This assessment is independent of live performance data and tracker completion.
 const growthScoreModel = [
-  ['Demand Generation', 100], ['Lead Quality', 100], ['Sales Conversion', 100],
-  ['Geographic Expansion', 75], ['Brand / Search Authority', 75], ['Tracking & Sales Integration', 50],
+  ['Demand Generation', 100, 52, 'Residential + C&I demand exists, but the qualified lead system is not yet fully structured by geography and segment.'],
+  ['Lead Quality & Conversion', 100, 42, 'Qualified leads are a clear priority; hard baselines for qualification, site surveys, proposals and closures are still missing.'],
+  ['Brand & Positioning', 100, 58, 'In-house design, quality, installation, service and warranty provide strong foundations; positioning is now clearer.'],
+  ['Geographic Expansion', 75, 34, 'Maharashtra, Gujarat and MP are identified; dedicated state-wise acquisition infrastructure still needs to be built.'],
+  ['SEO / Content / Authority', 75, 36, 'Strategic content direction and the industrial authority plan are clear; execution and measurable organic growth are needed.'],
+  ['Tracking & Sales Integration', 50, 16, 'The Sales Head is identified; CRM feedback, attribution, lead-quality tracking and revenue attribution remain major gaps.'],
 ];
+const growthScore = growthScoreModel.reduce((total, [, , current]) => total + current, 0);
+const growthScoreMaximum = growthScoreModel.reduce((total, [, weight]) => total + weight, 0);
+const scoreBands = [
+  [0, 150, 'Fragmented'], [151, 250, 'Foundation Stage'], [251, 350, 'Structured Growth'],
+  [351, 425, 'Scalable Growth Engine'], [426, 500, 'Category-Leading Growth System'],
+];
+const currentScoreBand = scoreBands.find(([minimum, maximum]) => growthScore >= minimum && growthScore <= maximum)[2];
+
 
 const DashboardView = () => {
   const navigate = useNavigate();
   const [selectedOverview, setSelectedOverview] = useState('Overview');
   const [mixGroup, setMixGroup] = useState('Objectives');
+  const needleAngle = Math.PI * (1 - growthScore / growthScoreMaximum);
   const groupMix = {
     Objectives: [['Core', 3], ['Strategic KPIs', 3], ['Growth metrics', 3]],
     Initiatives: [['Infrastructure', 3], ['Data loops', 3], ['Team', 3]],
@@ -191,16 +206,22 @@ const DashboardView = () => {
           </div>
           <div className="w-full lg:w-72 flex-shrink-0 bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-100 text-center">
             <h3 className="text-lg font-bold text-slate-800 mb-1">Growth Score</h3>
-            <p className="text-xs text-slate-500 mb-5">Madhav assessment · out of 500</p>
-            <svg viewBox="0 0 180 104" className="w-40 h-24 mb-2" role="img" aria-label="Growth Score baseline pending; no current score assessed">
+            <p className="text-xs text-slate-500 mb-5">Madhav Solar Growth Maturity · Out of 500</p>
+            <svg viewBox="0 0 180 104" className="w-40 h-24 mb-2" role="img" aria-label={`Current strategic growth maturity: ${growthScore} out of ${growthScoreMaximum}; ${currentScoreBand}`}>
               <path d="M 18 90 A 72 72 0 0 1 162 90" fill="none" stroke="#e2e8f0" strokeWidth="16" />
-              <text x="90" y="85" textAnchor="middle" fill="#94a3b8" fontSize="20">— / 500</text>
+              <path d="M 18 90 A 72 72 0 0 1 162 90" fill="none" stroke="var(--warning)" strokeWidth="16" pathLength="500" strokeDasharray={`${growthScore} ${growthScoreMaximum}`} />
+              <line x1="90" y1="90" x2={90 + 68 * Math.cos(needleAngle)} y2={90 - 68 * Math.sin(needleAngle)} stroke="#1e293b" strokeWidth="4" />
+              <circle cx="90" cy="90" r="8" fill="#1e293b" />
             </svg>
-            <div className="text-xl font-bold text-slate-800 mb-3">Baseline Pending</div>
-            <div className="w-full space-y-2 mb-4 text-xs text-slate-500">
-              <p>90-Day Target <strong className="text-blue-600">300+/500</strong></p>
-              <p>6-Month Target <strong className="text-emerald-600">375+/500</strong></p>
+            <div className="text-3xl font-bold text-slate-800 mb-1">{growthScore} / {growthScoreMaximum}</div>
+            <p className="text-xs font-semibold text-slate-600 mb-3">Current Growth Maturity</p>
+            <p className="text-xs font-semibold text-amber-700 mb-2">{currentScoreBand} · Close to Structured Growth</p>
+            <p className="text-xs text-slate-500 mb-3">Foundation Built. Growth System Needs Structuring.</p>
+            <div className="w-full space-y-2 mb-3 text-xs text-slate-500">
+              <p>90-Day Target: <strong className="text-blue-600">320+/500</strong></p>
+              <p>6-Month Target: <strong className="text-emerald-600">390+/500</strong></p>
             </div>
+            <p className="text-[10px] text-slate-400 mb-4">Strategic maturity assessment from project knowledge; live performance data is not connected.</p>
             <button onClick={showReport} className="w-full py-2 text-white text-sm font-bold rounded-xl transition-colors shadow-lg" style={{ backgroundColor: 'var(--info)' }}>View Report</button>
           </div>
         </div>
@@ -316,10 +337,21 @@ const DashboardView = () => {
         <p className="text-xs text-slate-500 mt-4">Segment and state shares must be set to a coherent 100% allocation. The proposed Maharashtra + Gujarat objective is 60–70% of leads, while the individual state ranges imply 70–80%; confirm the final lead allocation with the client. The priority-market OKR separately measures 70% of new pipeline across all three states.</p>
         <p className="text-xs text-slate-500 mt-3">Lead share and pipeline-value share are different measures. C&I targets 35–40% of qualified pipeline; C&I + Industrial targets 50%+. Growth and efficiency percentages need a baseline and comparison period. Pipeline value is not revenue or ROI.</p>
         <div className="mt-6 pt-6 border-t border-slate-100">
-          <h4 className="font-bold text-slate-800 mb-2">Growth Score model · 500 points</h4>
-          <p className="text-xs text-slate-500 mb-4">Current Growth Score: Baseline Pending. Assess each category only after actual data and scoring thresholds are agreed; tracker completion does not set the business score.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{growthScoreModel.map(([label, points]) => <div key={label} className="flex justify-between gap-3 bg-slate-50 rounded-lg px-4 py-3 text-xs"><span className="text-slate-600">{label}</span><strong className="text-slate-800">{points}</strong></div>)}</div>
-          <p className="text-sm font-semibold text-slate-700 mt-4">Total: 500 · 90-Day Target: 300+/500 · 6-Month Target: 375+/500</p>
+          <h4 className="font-bold text-slate-800 mb-2">Current Growth Maturity · {growthScore} / {growthScoreMaximum}</h4>
+          <p className="text-xs text-slate-500 mb-4">Current strategic maturity assessment based on the client questionnaire, positioning, marketing structure, funnel readiness, geographic plan, content maturity and measurement gaps. This is independent of live ad/CRM performance and saved tracker completion.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead><tr className="text-xs text-slate-500 border-b border-slate-200"><th className="py-3 pr-4">Growth area</th><th className="py-3 pr-4">Weight</th><th className="py-3 pr-4">Current score</th><th className="py-3">Why</th></tr></thead>
+              <tbody>{growthScoreModel.map(([label, weight, current, reason]) => <tr key={label} className="border-b border-slate-100"><td className="py-3 pr-4 font-semibold text-slate-700">{label}</td><td className="py-3 pr-4 text-slate-500">{weight}</td><td className="py-3 pr-4 font-bold text-blue-700">{current}</td><td className="py-3 text-xs text-slate-500">{reason}</td></tr>)}</tbody>
+              <tfoot><tr><td className="py-3 pr-4 font-bold text-slate-800">Total</td><td className="py-3 pr-4 font-bold">{growthScoreMaximum}</td><td className="py-3 pr-4 font-bold text-blue-700">{growthScore}</td><td className="py-3 text-xs font-semibold text-amber-700">{currentScoreBand} · Close to Structured Growth</td></tr></tfoot>
+            </table>
+          </div>
+          <div className="mt-5 bg-slate-50 rounded-xl p-4">
+            <p className="text-sm font-semibold text-slate-700 mb-2">Foundation Built. Growth System Needs Structuring.</p>
+            <p className="text-xs text-slate-600">Madhav Solar already has the business foundation, service capability and market opportunity. The growth infrastructure needs a structured qualified lead engine, state-wise campaign architecture, downstream lead-quality tracking, CRM and sales attribution, industrial positioning, and project proof converted into digital authority.</p>
+          </div>
+          <div className="mt-5"><h5 className="text-sm font-bold text-slate-800 mb-3">Growth maturity score bands</h5><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{scoreBands.map(([minimum, maximum, label]) => <div key={label} className={`flex justify-between gap-3 rounded-lg px-3 py-2 text-xs ${label === currentScoreBand ? 'bg-amber-50 text-amber-800 font-semibold' : 'bg-slate-50 text-slate-500'}`}><span>{minimum}–{maximum}</span><span>{label}</span></div>)}</div></div>
+          <p className="text-sm font-semibold text-slate-700 mt-4">90-Day Target: 320+/500 · 6-Month Target: 390+/500</p>
         </div>
       </div>
 

@@ -112,6 +112,8 @@ const rupees = value => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDi
 
 const DashboardView = () => {
   const navigate = useNavigate();
+  const [selectedOverview, setSelectedOverview] = useState('Overview');
+  const [mixGroup, setMixGroup] = useState('Objectives');
   const [completion] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('madhavsolarObjectivesData') || 'null');
@@ -123,85 +125,98 @@ const DashboardView = () => {
       return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
     } catch { return null; }
   });
+  const score = Math.max(0, Math.min(100, completion || 0));
+  const needleAngle = Math.PI * (1 - score / 100);
+  const groupMix = {
+    Objectives: [['Core', 3], ['Strategic KPIs', 3], ['Growth metrics', 3]],
+    Initiatives: [['Infrastructure', 3], ['Data loops', 3], ['Team', 3]],
+    Experiments: [['Demand & funnel', 4], ['Content & nurture', 4], ['PR & strategic', 6]],
+  }[mixGroup];
+  const mixTotal = groupMix.reduce((sum, [, count]) => sum + count, 0);
+  const firstStop = groupMix[0][1] / mixTotal * 100;
+  const secondStop = (groupMix[0][1] + groupMix[1][1]) / mixTotal * 100;
+  const tabContent = {
+    Demand: ['Qualified demand today', 'Residential + C&I acquisition: 300 enquiries → 120 qualified leads → 60 surveys → 30 proposals. Proposed 90-day targets; state and segment splits to validate.'],
+    Authority: ['Industrial authority tomorrow', 'Proposed proof output: 2 industrial case studies within a 6-case library, plus 12 engineering and leadership posts. Connect authority to technical consultations.'],
+    Brand: ['Premium reliability', 'Designed In-House. Installed Right. Supported Long After. Recommended mix: 25% reliability, 20% residential, 20% C&I economics, 15% industrial authority, 10% proof and 10% leadership.'],
+    ROI: ['Commercial scenario', '₹3 lakh media spend → 12 modelled wins × ₹2.5 lakh average project value = ₹30 lakh gross project revenue. This is a project-value scenario; profit and ROI require margins and full costs.'],
+  };
+  const showReport = () => document.getElementById('madhav-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div className="bg-white rounded-3xl p-6 lg:p-8 border border-slate-100 shadow-sm">
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
-            <div className="flex items-start gap-6 mb-6">
-              <div className="w-24 lg:w-40 h-24 rounded-2xl bg-white p-2 flex items-center justify-center border border-slate-100 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
+              <div className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-2xl overflow-hidden flex-shrink-0 shadow-md bg-white p-2 flex items-center justify-center">
                 <img src="https://madhavsolarenergy.com/wp-content/uploads/2023/07/MADHAV-SOLAR-ENERGY-scaled-1.png" alt="Madhav Solar Energy logo" className="w-full h-full object-contain" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 rounded-tl-xl" style={{ backgroundColor: 'var(--success)' }} />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">Madhav Solar Energy</h2>
-                <p className="text-sm text-slate-600 mb-3">Build qualified Residential + C&I demand today, while growing premium Industrial Solar authority tomorrow.</p>
-                <span className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg inline-block">Solar EPC · Growth Panel</span>
+                <p className="text-sm text-slate-600 mb-2">Qualified Residential + C&I demand today. Premium Industrial Solar authority tomorrow.</p>
+                <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-lg inline-block">Growth Panel Dashboard</span>
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
+                  {[
+                    { label: 'Qualified Leads', value: qualifiedTarget.toString(), icon: Zap, color: 'var(--success)' },
+                    { label: 'Lead-to-Sale', value: `${winTarget / qualifiedTarget * 100}%`, icon: Target, color: 'var(--info)' },
+                    { label: 'Project Revenue', value: `₹${revenueScenario / 100000}L`, icon: TrendingUp, color: 'var(--warning)' },
+                    { label: 'Proposal Pipeline', value: `₹${pipelineTarget / 100000}L`, icon: ArrowUpRight, color: 'var(--purple)' },
+                  ].map(stat => <div key={stat.label} className="flex flex-col px-4 py-2 border border-slate-100 border-dashed rounded-xl bg-slate-50/50 min-w-0"><div className="flex items-center gap-2 mb-1"><stat.icon size={14} style={{ color: stat.color }} /><span className="text-lg font-bold" style={{ color: stat.color }}>{stat.value}</span></div><span className="text-xs font-semibold text-slate-500">{stat.label}</span></div>)}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-3">Illustrative 90-day acquisition targets · actual performance pending</p>
               </div>
             </div>
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Growth North Star</p>
-              <p className="font-semibold text-slate-800">Build a predictable qualified lead engine across Maharashtra, Gujarat and Madhya Pradesh, differentiated by in-house design, installation quality and support beyond commissioning.</p>
-            </div>
-            <div className="mt-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-3">Proposed 90-day targets · Illustrative planning scenario</p>
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-                {[
-                  ['Qualified leads', qualifiedTarget.toString()],
-                  ['Site surveys', surveyTarget.toString()],
-                  ['Proposal pipeline', `₹${pipelineTarget / 100000} lakh`],
-                  ['Gross revenue scenario', `₹${revenueScenario / 100000} lakh`]
-                ].map(([label, value]) => <div key={label} className="bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3"><p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>{value}</p><p className="text-xs font-semibold text-slate-500 mt-1">{label}</p></div>)}
-              </div>
-              <p className="text-xs text-slate-500 mt-3">Proposed totals for a full 90-day acquisition period after launch. These are targets, not measured results or an approved media budget.</p>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-5">
-              {['Objectives', 'Initiatives', 'Experiments'].map(page => (
-                <button key={page} onClick={() => navigate(`/madhavsolar/${page.toLowerCase()}`)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-semibold hover:bg-slate-50">{page} →</button>
-              ))}
+            <div className="flex border-b border-slate-200 overflow-x-auto" role="tablist" aria-label="Growth overview">
+              {['Overview', 'Demand', 'Authority', 'Brand', 'ROI'].map(tab => <button key={tab} role="tab" id={`madhav-tab-${tab}`} aria-selected={selectedOverview === tab} aria-controls="madhav-tab-panel" onClick={() => setSelectedOverview(tab)} className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${selectedOverview === tab ? '' : 'border-transparent text-slate-500 hover:text-slate-800'}`} style={selectedOverview === tab ? { borderBottomColor: 'var(--info)', color: 'var(--info)' } : {}}>{tab}</button>)}
             </div>
           </div>
-          <div className="w-full lg:w-64 bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-100 text-center">
-            <h3 className="text-lg font-bold text-slate-800">Plan completion</h3>
-            <p className="text-xs text-slate-500 mt-2">User-entered objective tracker values</p>
-            <div className="text-4xl font-bold my-5" style={{ color: 'var(--primary)' }}>{completion === null ? 'Unassessed' : `${completion}%`}</div>
-            <p className="text-xs text-slate-500 mb-5">No live sales or media data connected. New tracks start at 0% until assessed.</p>
-            <button onClick={() => navigate('/madhavsolar/objectives')} className="w-full py-2 text-white text-sm font-bold rounded-xl" style={{ backgroundColor: 'var(--primary)' }}>Update objectives</button>
+          <div className="w-full lg:w-72 flex-shrink-0 bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-100 text-center">
+            <h3 className="text-lg font-bold text-slate-800 mb-1">Growth Score</h3>
+            <p className="text-xs text-slate-500 mb-5">Objective readiness · out of 100</p>
+            <svg viewBox="0 0 180 104" className="w-40 h-24 mb-2" role="img" aria-label={`Objective readiness: ${score} out of 100`}>
+              <path d="M 18 90 A 72 72 0 0 1 162 90" fill="none" stroke="var(--danger)" strokeWidth="16" />
+              <line x1="90" y1="90" x2={90 + 68 * Math.cos(needleAngle)} y2={90 - 68 * Math.sin(needleAngle)} stroke="#1e293b" strokeWidth="4" />
+              <circle cx="90" cy="90" r="8" fill="#1e293b" />
+            </svg>
+            <div className="text-4xl font-bold mb-2" style={{ color: 'var(--danger)' }}>{score}</div>
+            <p className="text-[10px] text-slate-400 mb-4">{score === 0 ? 'Awaiting objective assessment' : 'Based on your saved tracker progress'}</p>
+            <button onClick={showReport} className="w-full py-2 text-white text-sm font-bold rounded-xl transition-colors shadow-lg" style={{ backgroundColor: 'var(--info)' }}>View Report</button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div id="madhav-tab-panel" role="tabpanel" aria-labelledby={`madhav-tab-${selectedOverview}`}>
+        {selectedOverview !== 'Overview' && <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm"><h3 className="font-bold text-slate-800 mb-3">{tabContent[selectedOverview][0]}</h3><p className="text-sm text-slate-600 leading-relaxed">{tabContent[selectedOverview][1]}</p><button onClick={selectedOverview === 'ROI' ? showReport : () => navigate(selectedOverview === 'Demand' ? '/madhavsolar/objectives' : '/madhavsolar/experiments')} className="text-xs font-bold text-blue-600 mt-4">{selectedOverview === 'ROI' ? 'View scenario assumptions →' : 'Explore the action plan →'}</button></div>}
+        {selectedOverview === 'Overview' && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
+            {[
+              { label: 'Qualified Leads / 90 Days', value: qualifiedTarget.toString(), detail: 'Target: 120 · 40% of 300 enquiries', color: 'var(--info)' },
+              { label: 'Cost per Qualified Lead', value: rupees(planningScenario.mediaSpend / qualifiedTarget), detail: 'Target · ₹3 lakh media scenario', color: 'var(--danger)' },
+              { label: 'Qualified → Site Survey', value: `${planningScenario.surveyShare * 100}%`, detail: 'Target: 60 surveys from 120 leads', color: 'var(--success)' },
+            ].map(stat => <div key={stat.label} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-3"><div><h4 className="text-slate-500 font-semibold text-sm mb-1">{stat.label}</h4><p className="text-xs text-slate-400">{stat.detail}</p></div><div className="text-2xl font-bold whitespace-nowrap" style={{ color: stat.color }}>{stat.value}</div></div>)}
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col min-h-[270px]">
+            <div className="mb-5"><h3 className="font-bold text-slate-800">Daily Leads</h3><p className="text-xs text-slate-400 mt-1">Illustrative weekly pace · 300 enquiries / 90 days</p></div>
+            <div className="flex-1 flex items-end justify-between gap-2 min-h-[150px]" role="img" aria-label="Illustrative planned week: Monday 3, Tuesday 4, Wednesday 3, Thursday 4, Friday 3, Saturday 3, Sunday 3 enquiries">
+              {[3, 4, 3, 4, 3, 3, 3].map((value, index) => <div key={index} className="flex-1 h-40 flex flex-col justify-end items-center gap-2"><span className="text-[10px] text-slate-400">{value}</span><div title={`${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][index]}: ${value} planned enquiries`} className="w-full bg-blue-100 hover:bg-blue-300 rounded-t-lg transition-colors" style={{ height: `${value / 5 * 100}%` }} /><span className="text-[10px] text-slate-400">{['M','T','W','T','F','S','S'][index]}</span></div>)}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-3">Planning illustration; no daily results recorded.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col min-h-[270px]">
+            <div className="flex justify-between gap-3 items-start mb-5"><div><h3 className="font-bold text-slate-800">Growth Mix</h3><p className="text-xs text-slate-400 mt-1">Plan tracks by group</p></div><select aria-label="Growth mix group" value={mixGroup} onChange={event => setMixGroup(event.target.value)} className="bg-slate-50 border-none text-xs font-bold text-slate-600 rounded-lg outline-none max-w-[110px]"><option>Objectives</option><option>Initiatives</option><option>Experiments</option></select></div>
+            <div className="flex-1 flex items-center justify-center py-2"><div className="w-32 h-32 rounded-full p-3" role="img" aria-label={`${mixGroup}: ${groupMix.map(([label,count]) => `${label} ${count}`).join(', ')}`} style={{ background: `conic-gradient(var(--indigo) 0% ${firstStop}%, var(--warning) ${firstStop}% ${secondStop}%, var(--info) ${secondStop}% 100%)` }}><div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center"><span className="text-xs font-bold text-slate-400">Total</span><span className="text-lg font-bold text-slate-800">{mixTotal}</span></div></div></div>
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-2 mt-4">{groupMix.map(([label,count], index) => <div key={label} className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-600"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: ['var(--indigo)','var(--warning)','var(--info)'][index] }} />{label} ({count})</div>)}</div>
+          </div>
+        </div>}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {[
-          { label: 'Average project-value focus', value: '₹2.5 lakh', detail: 'Client input; minimum threshold pending', color: 'var(--success)' },
-          { label: 'Priority geographic markets', value: '3 states', detail: 'Maharashtra · Gujarat · Madhya Pradesh', color: 'var(--info)' },
-          { label: 'Primary growth outcome', value: 'Qualified leads', detail: 'Optimise for sales acceptance and pipeline', color: 'var(--primary)' },
-          { label: 'Business performance baseline', value: 'Pending', detail: 'Need spend, CPL, leads and conversion data', color: 'var(--warning)' }
-        ].map(stat => <div key={stat.label} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><p className="text-xs font-semibold text-slate-500">{stat.label}</p><p className="text-xl font-bold my-3" style={{ color: stat.color }}>{stat.value}</p><p className="text-xs text-slate-500">{stat.detail}</p></div>)}
-      </div>
-
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div className="flex flex-wrap justify-between items-start gap-3 mb-5">
-          <div><h3 className="font-bold text-slate-800">The numbers behind the plan</h3><p className="text-xs text-slate-500 mt-2">Illustrative targets for 90 days after campaign launch; sales-cycle timing may push wins into a later period.</p></div>
-          <span className="text-xs font-semibold bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg">Client validation required</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead><tr className="text-xs text-slate-500 border-b border-slate-200"><th className="py-3 pr-4">Metric</th><th className="py-3 pr-4">Proposed target</th><th className="py-3 pr-4">Assumption / definition</th><th className="py-3">Actual</th></tr></thead>
-            <tbody>{[
-              ['Enquiries', planningScenario.enquiries.toString(), 'Combined Residential + C&I enquiries'],
-              ['Qualified leads', qualifiedTarget.toString(), '40% of enquiries accepted by Sales'],
-              ['Site surveys held', surveyTarget.toString(), '50% of qualified leads'],
-              ['Proposals', proposalTarget.toString(), '50% of held surveys'],
-              ['Won projects', winTarget.toString(), '40% of proposals; 10% of qualified leads'],
-              ['Proposal pipeline', rupees(pipelineTarget), '30 proposals × ₹2.5 lakh assumed average value'],
-              ['Gross revenue scenario', rupees(revenueScenario), '12 wins × ₹2.5 lakh assumed average value'],
-              ['Media budget scenario', rupees(planningScenario.mediaSpend), '₹1 lakh per month for 3 acquisition months; unapproved'],
-              ['Cost per enquiry', rupees(planningScenario.mediaSpend / planningScenario.enquiries), 'Media spend ÷ enquiries'],
-              ['Cost per qualified lead', rupees(planningScenario.mediaSpend / qualifiedTarget), 'Media spend ÷ qualified leads']
-            ].map(([label, value, detail]) => <tr key={label} className="border-b border-slate-100"><td className="py-3 pr-4 font-semibold text-slate-700">{label}</td><td className="py-3 pr-4 font-bold text-blue-700 whitespace-nowrap">{value}</td><td className="py-3 pr-4 text-xs text-slate-500">{detail}</td><td className="py-3 text-xs text-slate-400">Pending</td></tr>)}</tbody>
-          </table>
-        </div>
-        <p className="text-xs text-slate-500 mt-4">₹2.5 lakh comes from the brief’s project-value focus. Lead volumes, conversion rates and spend are proposed assumptions. Gross revenue is project value, not profit or ROI; costs, margins and sales-cycle lag must be validated. The first 30 days of foundation work are separate from this full acquisition-period model.</p>
+          ['Objectives', 'Qualified demand, premium reliability and geographic expansion.', '9 tracked objectives', '/madhavsolar/objectives'],
+          ['Initiatives', 'Tracking, landing journeys, proof library and Sales Head feedback loops.', '9 delivery initiatives', '/madhavsolar/initiatives'],
+          ['Experiments', 'Segment search pilots, local proof, conversion, nurture and industrial authority.', '14 proposed experiments', '/madhavsolar/experiments'],
+        ].map(([title, detail, count, route]) => <div key={title} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm"><div className="flex justify-between items-center mb-4"><h3 className="font-bold text-slate-800">{title}</h3><span className="text-xs text-slate-400">{count}</span></div><p className="text-sm text-slate-600 leading-relaxed">{detail}</p><button onClick={() => navigate(route)} className="text-xs font-bold text-blue-600 mt-5">Open {title.toLowerCase()} →</button></div>)}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -263,6 +278,31 @@ const DashboardView = () => {
         <div className="flex flex-wrap gap-4 mt-3 text-xs text-blue-700"><a href="https://madhavsolarenergy.com/" target="_blank" rel="noopener noreferrer">Company website ↗</a><a href="https://madhavsolarenergy.com/projects/" target="_blank" rel="noopener noreferrer">Project proof to verify ↗</a><a href="https://madhavsolarenergy.com/contact/" target="_blank" rel="noopener noreferrer">Current assessment journey ↗</a></div>
         <p className="text-xs mt-3">All initiatives are proposed. Percentages on tracker pages represent user-assessed plan completion, not historical performance; numeric growth targets are labelled as illustrative assumptions; actual performance remains pending.</p>
       </div>
+      <div id="madhav-report" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm scroll-mt-6">
+        <div className="flex flex-wrap justify-between items-start gap-3 mb-5">
+          <div><h3 className="font-bold text-slate-800">The numbers behind the plan</h3><p className="text-xs text-slate-500 mt-2">Illustrative targets for 90 days after campaign launch; sales-cycle timing may push wins into a later period.</p></div>
+          <span className="text-xs font-semibold bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg">Client validation required</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead><tr className="text-xs text-slate-500 border-b border-slate-200"><th className="py-3 pr-4">Metric</th><th className="py-3 pr-4">Proposed target</th><th className="py-3 pr-4">Assumption / definition</th><th className="py-3">Actual</th></tr></thead>
+            <tbody>{[
+              ['Enquiries', planningScenario.enquiries.toString(), 'Combined Residential + C&I enquiries'],
+              ['Qualified leads', qualifiedTarget.toString(), '40% of enquiries accepted by Sales'],
+              ['Site surveys held', surveyTarget.toString(), '50% of qualified leads'],
+              ['Proposals', proposalTarget.toString(), '50% of held surveys'],
+              ['Won projects', winTarget.toString(), '40% of proposals; 10% of qualified leads'],
+              ['Proposal pipeline', rupees(pipelineTarget), '30 proposals × ₹2.5 lakh assumed average value'],
+              ['Gross revenue scenario', rupees(revenueScenario), '12 wins × ₹2.5 lakh assumed average value'],
+              ['Media budget scenario', rupees(planningScenario.mediaSpend), '₹1 lakh per month for 3 acquisition months; unapproved'],
+              ['Cost per enquiry', rupees(planningScenario.mediaSpend / planningScenario.enquiries), 'Media spend ÷ enquiries'],
+              ['Cost per qualified lead', rupees(planningScenario.mediaSpend / qualifiedTarget), 'Media spend ÷ qualified leads']
+            ].map(([label, value, detail]) => <tr key={label} className="border-b border-slate-100"><td className="py-3 pr-4 font-semibold text-slate-700">{label}</td><td className="py-3 pr-4 font-bold text-blue-700 whitespace-nowrap">{value}</td><td className="py-3 pr-4 text-xs text-slate-500">{detail}</td><td className="py-3 text-xs text-slate-400">Pending</td></tr>)}</tbody>
+          </table>
+        </div>
+        <p className="text-xs text-slate-500 mt-4">₹2.5 lakh comes from the brief’s project-value focus. Lead volumes, conversion rates and spend are proposed assumptions. Gross revenue is project value, not profit or ROI; costs, margins and sales-cycle lag must be validated. The first 30 days of foundation work are separate from this full acquisition-period model.</p>
+      </div>
+
     </div>
   );
 };
@@ -333,8 +373,8 @@ export default function MadhavSolarDashboardPage() {
               className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
             >
               <img 
-                src="https://madhavsolarenergy.com/wp-content/uploads/2023/07/MADHAV-SOLAR-ENERGY-scaled-1.png" 
-                alt="Madhav Solar Energy Logo" 
+                src="https://grow.gocommercially.com/assets/media/logo/L159551452639.svg"
+                alt="GO Growth logo"
                 className="w-8 h-8 mr-3 object-contain"
               />
               <span className="text-2xl font-bold text-slate-800 tracking-tight">GO <span style={{ color: 'var(--primary)' }}>Growth</span></span>
@@ -350,8 +390,8 @@ export default function MadhavSolarDashboardPage() {
             <div className="my-6 border-t border-slate-100 mx-2"></div>
             <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">KPIs</p>
 
-            <SidebarItem icon={FileText} label="Figures List" active={activeTab === 'Figures'} onClick={() => setActiveTab('Figures')} />
-            <SidebarItem icon={Users} label="Client Master" active={activeTab === 'Client'} onClick={() => setActiveTab('Client')} />
+            <SidebarItem icon={FileText} label="Figures List" active={activeTab === 'Figures'} onClick={() => document.getElementById('madhav-report')?.scrollIntoView({ behavior: 'smooth' })} />
+            <SidebarItem icon={Users} label="Client Master" active={activeTab === 'Client'} onClick={() => navigate('/home')} />
             <SidebarItem icon={Settings} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
           </div>
         </div>

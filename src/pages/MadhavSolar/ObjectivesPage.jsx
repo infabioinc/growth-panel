@@ -343,19 +343,19 @@ const ProgressBar = ({ percentage, colorClass }) => {
 
 const proposedTargets = {
   coreObjectives: {
-    1: '90-day acquisition target: 120 qualified Residential + C&I leads from 300 enquiries.',
-    2: '90-day delivery target: 6 verified project cases, 6 approved testimonials and 3 lifecycle proof assets.',
-    3: '90-day delivery target: 3 state landing journeys with confirmed city coverage and sales routing.',
+    1: '100–150+ qualified leads / month; +40% qualified lead growth. C&I: 35–40% of qualified pipeline; Industrial: 10–15% of qualified leads in the first phase.',
+    2: '+30% branded search growth; brand OKR: 30% growth in branded search + direct traffic. Validate both against the baseline.',
+    3: 'Geographic objective: 60–70% of leads from Maharashtra + Gujarat. State targets: Maharashtra 35–40%, Gujarat 35–40%, MP 20–25%; reconcile allocations to 100%. Priority-market OKR: 70% of new pipeline across all three states.',
   },
   strategicKPIs: {
-    1: 'Scenario: 60 surveys → 30 proposals / ₹75 lakh pipeline → 12 wins / ₹30 lakh gross project revenue.',
-    2: '90-day delivery target: 2 industrial case studies within the 6-case proof library + 12 engineering / leadership posts.',
-    3: '90-day measurement target: weekly reporting for all 3 priority states across spend, lead quality and proposals.',
+    1: 'Demand & Conversion: 4–6% landing-page CVR. Lead Quality: 35–45% qualification. Sales Progression: 25–35% lead-to-survey. Commercial Conversion: 20–30% proposal-to-project. Influenced pipeline: ₹50L–₹75L / quarter.',
+    2: 'Search & SEO: 30–40% organic traffic growth; 40–50% high-intent keyword growth. Industrial lead share: 10–15%. C&I + Industrial OKR: 50%+ of qualified pipeline.',
+    3: 'Marketing efficiency OKR: 25% improvement in Cost Per Qualified Lead. Compare conversion, pipeline value and capacity by state against confirmed baselines.',
   },
   growthMetrics: {
-    1: 'Scenario targets: 40% sales acceptance; ₹2,500 cost per qualified lead on ₹3 lakh media spend.',
-    2: 'Scenario conversion targets: 50% qualified-to-survey, 50% survey-to-proposal, 40% proposal-to-win.',
-    3: 'Days 1–30 target: agree 100% of baseline definitions with Sales Head before approving the media plan.',
+    1: 'Qualified lead rate: 35–45%. Residential lead share: 45–50%; C&I: 35–40%; Industrial: 10–15%. Remarketing: 15–20% of qualified leads. Average target project value: ₹2.5L+.',
+    2: 'Landing-page CVR: 4–6%; lead-to-survey: 25–35%; survey-to-proposal: 50–60%; proposal-to-project: 20–30%. Confirm the lead denominator before reporting.',
+    3: 'Baseline pending: agree metric definitions and comparison periods before assessment. Growth Score targets: 300+/500 at 90 days; 375+/500 at 6 months. No current business score until actual data is available.',
   },
 };
 

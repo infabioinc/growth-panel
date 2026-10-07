@@ -334,6 +334,24 @@ const ProgressBar = ({ percentage, colorClass }) => {
   );
 };
 
+const proposedTargets = {
+  coreObjectives: {
+    1: '90-day acquisition target: 120 qualified Residential + C&I leads from 300 enquiries.',
+    2: '90-day delivery target: 6 verified project cases, 6 approved testimonials and 3 lifecycle proof assets.',
+    3: '90-day delivery target: 3 state landing journeys with confirmed city coverage and sales routing.',
+  },
+  strategicKPIs: {
+    1: 'Scenario: 60 surveys → 30 proposals / ₹75 lakh pipeline → 12 wins / ₹30 lakh gross project revenue.',
+    2: '90-day delivery target: 2 industrial case studies within the 6-case proof library + 12 engineering / leadership posts.',
+    3: '90-day measurement target: weekly reporting for all 3 priority states across spend, lead quality and proposals.',
+  },
+  growthMetrics: {
+    1: 'Scenario targets: 40% sales acceptance; ₹2,500 cost per qualified lead on ₹3 lakh media spend.',
+    2: 'Scenario conversion targets: 50% qualified-to-survey, 50% survey-to-proposal, 40% proposal-to-win.',
+    3: 'Days 1–30 target: agree 100% of baseline definitions with Sales Head before approving the media plan.',
+  },
+};
+
 const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiveId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -410,9 +428,11 @@ const ObjectiveCard = ({ item, onUpdateValue, onUpdateStatus, category, objectiv
           </button>
         </div>
 
+        <p className="text-xs text-blue-700 bg-blue-50 rounded-lg p-3 mb-4 leading-relaxed"><span className="font-semibold">Proposed target · </span>{proposedTargets[category]?.[objectiveId]}<span className="block text-slate-500 mt-1">Planning assumption; validate against baseline, budget and capacity.</span></p>
+
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Success Rate</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Plan completion</span>
             <span className="text-sm font-bold text-slate-800">{calculatedProgress}%</span>
           </div>
           <ProgressBar percentage={calculatedProgress} colorClass={colorClass} />

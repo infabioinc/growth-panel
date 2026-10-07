@@ -92,6 +92,24 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, hasSubmenu }) => (
 
 // --- Dashboard View Component ---
 
+// Illustrative 90-day acquisition model; client approval and baseline validation required.
+const planningScenario = {
+  enquiries: 300,
+  qualifiedShare: 0.4,
+  surveyShare: 0.5,
+  proposalShare: 0.5,
+  winShare: 0.4,
+  projectValue: 250000,
+  mediaSpend: 300000,
+};
+const qualifiedTarget = planningScenario.enquiries * planningScenario.qualifiedShare;
+const surveyTarget = qualifiedTarget * planningScenario.surveyShare;
+const proposalTarget = surveyTarget * planningScenario.proposalShare;
+const winTarget = proposalTarget * planningScenario.winShare;
+const pipelineTarget = proposalTarget * planningScenario.projectValue;
+const revenueScenario = winTarget * planningScenario.projectValue;
+const rupees = value => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value)}`;
+
 const DashboardView = () => {
   const navigate = useNavigate();
   const [completion] = useState(() => {
@@ -124,6 +142,18 @@ const DashboardView = () => {
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Growth North Star</p>
               <p className="font-semibold text-slate-800">Build a predictable qualified lead engine across Maharashtra, Gujarat and Madhya Pradesh, differentiated by in-house design, installation quality and support beyond commissioning.</p>
             </div>
+            <div className="mt-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-3">Proposed 90-day targets · Illustrative planning scenario</p>
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                {[
+                  ['Qualified leads', qualifiedTarget.toString()],
+                  ['Site surveys', surveyTarget.toString()],
+                  ['Proposal pipeline', `₹${pipelineTarget / 100000} lakh`],
+                  ['Gross revenue scenario', `₹${revenueScenario / 100000} lakh`]
+                ].map(([label, value]) => <div key={label} className="bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3"><p className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>{value}</p><p className="text-xs font-semibold text-slate-500 mt-1">{label}</p></div>)}
+              </div>
+              <p className="text-xs text-slate-500 mt-3">Proposed totals for a full 90-day acquisition period after launch. These are targets, not measured results or an approved media budget.</p>
+            </div>
             <div className="flex flex-wrap gap-3 mt-5">
               {['Objectives', 'Initiatives', 'Experiments'].map(page => (
                 <button key={page} onClick={() => navigate(`/madhavsolar/${page.toLowerCase()}`)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-semibold hover:bg-slate-50">{page} →</button>
@@ -147,6 +177,31 @@ const DashboardView = () => {
           { label: 'Primary growth outcome', value: 'Qualified leads', detail: 'Optimise for sales acceptance and pipeline', color: 'var(--primary)' },
           { label: 'Business performance baseline', value: 'Pending', detail: 'Need spend, CPL, leads and conversion data', color: 'var(--warning)' }
         ].map(stat => <div key={stat.label} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"><p className="text-xs font-semibold text-slate-500">{stat.label}</p><p className="text-xl font-bold my-3" style={{ color: stat.color }}>{stat.value}</p><p className="text-xs text-slate-500">{stat.detail}</p></div>)}
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div className="flex flex-wrap justify-between items-start gap-3 mb-5">
+          <div><h3 className="font-bold text-slate-800">The numbers behind the plan</h3><p className="text-xs text-slate-500 mt-2">Illustrative targets for 90 days after campaign launch; sales-cycle timing may push wins into a later period.</p></div>
+          <span className="text-xs font-semibold bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg">Client validation required</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead><tr className="text-xs text-slate-500 border-b border-slate-200"><th className="py-3 pr-4">Metric</th><th className="py-3 pr-4">Proposed target</th><th className="py-3 pr-4">Assumption / definition</th><th className="py-3">Actual</th></tr></thead>
+            <tbody>{[
+              ['Enquiries', planningScenario.enquiries.toString(), 'Combined Residential + C&I enquiries'],
+              ['Qualified leads', qualifiedTarget.toString(), '40% of enquiries accepted by Sales'],
+              ['Site surveys held', surveyTarget.toString(), '50% of qualified leads'],
+              ['Proposals', proposalTarget.toString(), '50% of held surveys'],
+              ['Won projects', winTarget.toString(), '40% of proposals; 10% of qualified leads'],
+              ['Proposal pipeline', rupees(pipelineTarget), '30 proposals × ₹2.5 lakh assumed average value'],
+              ['Gross revenue scenario', rupees(revenueScenario), '12 wins × ₹2.5 lakh assumed average value'],
+              ['Media budget scenario', rupees(planningScenario.mediaSpend), '₹1 lakh per month for 3 acquisition months; unapproved'],
+              ['Cost per enquiry', rupees(planningScenario.mediaSpend / planningScenario.enquiries), 'Media spend ÷ enquiries'],
+              ['Cost per qualified lead', rupees(planningScenario.mediaSpend / qualifiedTarget), 'Media spend ÷ qualified leads']
+            ].map(([label, value, detail]) => <tr key={label} className="border-b border-slate-100"><td className="py-3 pr-4 font-semibold text-slate-700">{label}</td><td className="py-3 pr-4 font-bold text-blue-700 whitespace-nowrap">{value}</td><td className="py-3 pr-4 text-xs text-slate-500">{detail}</td><td className="py-3 text-xs text-slate-400">Pending</td></tr>)}</tbody>
+          </table>
+        </div>
+        <p className="text-xs text-slate-500 mt-4">₹2.5 lakh comes from the brief’s project-value focus. Lead volumes, conversion rates and spend are proposed assumptions. Gross revenue is project value, not profit or ROI; costs, margins and sales-cycle lag must be validated. The first 30 days of foundation work are separate from this full acquisition-period model.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -206,7 +261,7 @@ const DashboardView = () => {
         <p className="font-semibold mb-2">Source & scope · 07 October 2026</p>
         <p>Built from the supplied Madhav Solar strategic master note. The website currently leads with industrial positioning; dedicated Residential + C&I journeys should connect that public positioning to the brief’s immediate revenue priorities.</p>
         <div className="flex flex-wrap gap-4 mt-3 text-xs text-blue-700"><a href="https://madhavsolarenergy.com/" target="_blank" rel="noopener noreferrer">Company website ↗</a><a href="https://madhavsolarenergy.com/projects/" target="_blank" rel="noopener noreferrer">Project proof to verify ↗</a><a href="https://madhavsolarenergy.com/contact/" target="_blank" rel="noopener noreferrer">Current assessment journey ↗</a></div>
-        <p className="text-xs mt-3">All initiatives are proposed. Percentages on tracker pages represent user-assessed plan completion, not historical performance; no unsupported revenue, campaign activity or growth figures are presented.</p>
+        <p className="text-xs mt-3">All initiatives are proposed. Percentages on tracker pages represent user-assessed plan completion, not historical performance; numeric growth targets are labelled as illustrative assumptions; actual performance remains pending.</p>
       </div>
     </div>
   );
